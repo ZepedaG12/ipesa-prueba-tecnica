@@ -1,0 +1,188 @@
+program main;
+#include main.iri
+-- IPESA Ensacado - Prueba tecnica iRite para Rice Lake 1280.
+-- Monolito intencional: una pantalla Revolution ya configurada y un solo SRC.
+-- El archivo usa sintaxis iRite validada contra Context7 /fr4nkastro/frank-docs:
+-- declaraciones antes de uso, procedimientos/handlers con begin/end, := para
+-- asignacion, = para comparacion, y handlers WidgetClicked/UserEntry/Timer1Trip.
+
+-- ---------------------------------------------------------------------------
+-- Configuracion basica
+-- ---------------------------------------------------------------------------
+
+g_ciScale1        : constant integer := 1;
+g_ciFillSlot      : constant integer := 0;
+g_ciFillOutput    : constant integer := 1;
+g_ciTimerMonitor  : constant integer := 1;
+g_ciMonitorMs     : constant integer := 25;
+
+g_ciEntryNone     : constant integer := 0;
+
+type Entry is (
+    EntryTargetWeight
+);
+type DataType is (strType, numType, passType);
+
+g_rTargetWeight   : real;
+g_rCurrentWeight  : real;
+g_iFilling        : integer;
+g_iOutputState    : integer;
+g_iPendingEntry   : Entry;
+g_sState          : string;
+
+-- ---------------------------------------------------------------------------
+-- Utilidades
+-- ---------------------------------------------------------------------------
+
+procedure entryPrompt(dataType: DataType; message: string);
+begin
+    ClosePrompt;
+    if dataType = strType then    
+        PromptUser(message);
+    elsif dataType= numType then
+        PromptNumeric(message);
+    elsif dataType = passType then
+        PromptPassword(message);
+    end if;
+end;
+
+function ReadGrossWeight : real;
+    sysError : SysCode;
+    rWeight  : real;
+begin
+    rWeight := g_rCurrentWeight;
+    sysError := GetGross(g_ciScale1, Primary, rWeight);
+    if sysError <> SysOk then
+        DisplayStatus("Error GetGross");
+    end if;
+    return rWeight;
+end;
+
+procedure RefreshScreen;
+begin
+    SetLabelText(lbWtarge, RealToString(g_rTargetWeight, 0, 2) + " kg");
+    SetLabelText(lbState, g_sState);
+
+    if g_iOutputState = 1 then
+        SetLabelText(lbOutput, "ON");
+    else
+        SetLabelText(lbOutput, "OFF");
+    end if;
+end;
+
+procedure SetFillOutput(iValue : integer);
+    sysError : SysCode;
+begin
+    sysError := SetDigout(g_ciFillSlot, g_ciFillOutput, iValue);
+    if sysError <> SysOk then
+        DisplayStatus("Error SetDigout");
+    end if;
+    RefreshScreen;
+end;
+
+procedure StopFilling(sReason : string);
+begin
+    g_iFilling := 0;
+    g_sState := sReason;
+    SetFillOutput(0);
+end;
+
+procedure StartFilling;
+begin
+    if g_rTargetWeight <= 0.0 then
+        g_sState := "SETEA PESO";
+        RefreshScreen;
+        return;
+    end if;
+
+    g_iFilling := 1;
+    g_sState := "LLENANDO";
+    SetFillOutput(1);
+end;
+
+procedure CheckTarget;
+begin
+    g_rCurrentWeight := ReadGrossWeight;
+
+    if g_iFilling = 1 then
+        if g_rCurrentWeight >= g_rTargetWeight then
+            StopFilling("COMPLETADO");
+        else
+            RefreshScreen;
+        end if;
+    else
+        RefreshScreen;
+    end if;
+end;
+
+-- ---------------------------------------------------------------------------
+-- Handlers iRite
+-- ---------------------------------------------------------------------------
+
+handler WidgetClicked;
+    iWidget : integer;
+begin
+    iWidget := EventWidget;
+
+    if iWidget = lbWtarge then
+        g_iPendingEntry := EntryTargetWeight;
+        entryPrompt(numType, "Peso objetivo kg");
+    elsif iWidget = btStart then
+        StartFilling;
+    end if;
+end;
+
+handler UserEntry;
+    sEntry : string;
+    rEntry : real;
+begin
+    sEntry := GetEntry;
+
+    if g_iPendingEntry = EntryTargetWeight then
+        if sEntry <> "" then
+            rEntry := StringToReal(sEntry);
+            if rEntry < 0.0 then
+                rEntry := 0.0;
+            end if;
+            if rEntry > 999.0 then
+                rEntry := 999.0;
+            end if;
+            g_rTargetWeight := rEntry;
+        end if;
+    end if;
+
+    -- g_iPendingEntry := g_ciEntryNone
+    RefreshScreen;
+end;
+
+handler Timer1Trip;
+begin
+    CheckTarget;
+end;
+
+-- Cree aca el nuevo handler para el setpoint 1 y mande a llamar StopFilling("COMPLETADO"); dentro del Handler
+
+-- ---------------------------------------------------------------------------
+-- Startup handlerStartup
+-- ---------------------------------------------------------------------------
+
+begin
+    g_rTargetWeight := 50.0;
+    g_rCurrentWeight := 0.0;
+    g_iFilling := 0;
+    g_iOutputState := 0;
+    -- g_iPendingEntry := g_ciEntryNone;
+    g_sState := "ESPERANDO";
+
+    SelectScreen(1);
+    SetFillOutput(0);
+    RefreshScreen;
+
+    SetTimerMode(g_ciTimerMonitor, TimerContinuous);
+    -- Inicializacion de timer
+    SetTimer(g_ciTimerMonitor, g_ciMonitorMs);
+    StartTimer(g_ciTimerMonitor);
+    -- Inicializacion de setpoint.
+    -- Ingrese aca la funcion set del setpoint 1 con el valor del peso objetivo g_rTargetWeight
+    -- Ingrese aca la funcion enable del setpoint 1
+end main;

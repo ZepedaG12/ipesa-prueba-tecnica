@@ -1,0 +1,15 @@
+{
+  "Method": "TCP",
+  "TCP": {
+    "indicator": "1280",
+    "ipaddress": "10.10.10.10",
+    "tcpport": "10001"
+  },
+  "RS232": {
+    "comport": "COM1",
+    "baudrate": "9600",
+    "databits": "8",
+    "parity": "None",
+    "stopbits": "One"
+  }
+}

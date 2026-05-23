@@ -1,0 +1,46 @@
+-- Scale Aliases
+
+-- Digital I/O Aliases
+DIOCRD0   : constant integer := 0;
+DIO0_1    : constant integer := 1;
+DIO0_2    : constant integer := 2;
+DIO0_3    : constant integer := 3;
+DIO0_4    : constant integer := 4;
+DIO0_5    : constant integer := 5;
+DIO0_6    : constant integer := 6;
+DIO0_7    : constant integer := 7;
+DIO0_8    : constant integer := 8;
+
+
+
+-- Analog Output Aliases
+
+-- Database Type Definitions and Field Aliases
+
+
+
+-- Serial Port Aliases
+Port1     : constant integer := 1;
+Port2     : constant integer := 2;
+Port3     : constant integer := 3;
+
+-- Ethernet Communication Aliases
+TCPS      : constant string := "TCPS";
+UDPS      : constant string := "UDPS";
+TCPC1     : constant string := "TCPC1";
+TCPC2     : constant string := "TCPC2";
+TCPC3     : constant string := "TCPC3";
+
+-- Setpoint Aliases
+
+-- Widget Aliases
+lbl2      : constant integer := 2;
+lbWtarge  : constant integer := 3;
+btStart   : constant integer := 4;
+lbl5      : constant integer := 5;
+lbState   : constant integer := 6;
+lbl7      : constant integer := 7;
+lbOutput  : constant integer := 8;
+
+USBPRN    : constant string := "USBPRN";
+ADVPRN    : constant string := "ADVPRN";
