@@ -1,6 +1,6 @@
---$START  c:\Users\Usuario\Documents\LocalDev\PRUEBAS\ipesa-ensacado-prueba-tecnica\prueba\main.src
+--$START  c:\Users\josez\OneDrive\Desktop\IPEHSA - Prueba\ipesa-prueba-tecnica\prueba\main.src
 program main;
---$START  c:\Users\Usuario\Documents\LocalDev\PRUEBAS\ipesa-ensacado-prueba-tecnica\prueba\main.iri 
+--$START  c:\Users\josez\OneDrive\Desktop\IPEHSA - Prueba\ipesa-prueba-tecnica\prueba\main.iri 
  -- Scale Aliases
 
 -- Digital I/O Aliases
@@ -48,7 +48,7 @@ lbOutput  : constant integer := 8;
 USBPRN    : constant string := "USBPRN";
 ADVPRN    : constant string := "ADVPRN";
  
- --$END  c:\Users\Usuario\Documents\LocalDev\PRUEBAS\ipesa-ensacado-prueba-tecnica\prueba\main.iri
+ --$END  c:\Users\josez\OneDrive\Desktop\IPEHSA - Prueba\ipesa-prueba-tecnica\prueba\main.iri
 -- IPESA Ensacado - Prueba tecnica iRite para Rice Lake 1280.
 -- Monolito intencional: una pantalla Revolution ya configurada y un solo SRC.
 -- El archivo usa sintaxis iRite validada contra Context7 /fr4nkastro/frank-docs:
@@ -65,9 +65,8 @@ g_ciFillOutput    : constant integer := 1;
 g_ciTimerMonitor  : constant integer := 1;
 g_ciMonitorMs     : constant integer := 25;
 
-g_ciEntryNone     : constant integer := 0;
-
 type Entry is (
+    EntryNone,
     EntryTargetWeight
 );
 type DataType is (strType, numType, passType);
@@ -149,20 +148,20 @@ begin
     SetFillOutput(1);
 end;
 
-procedure CheckTarget;
-begin
-    g_rCurrentWeight := ReadGrossWeight;
+--procedure CheckTarget;
+--begin
+--    g_rCurrentWeight := ReadGrossWeight;
 
-    if g_iFilling = 1 then
-        if g_rCurrentWeight >= g_rTargetWeight then
-            StopFilling("COMPLETADO");
-        else
-            RefreshScreen;
-        end if;
-    else
-        RefreshScreen;
-    end if;
-end;
+--    if g_iFilling = 1 then
+--        if g_rCurrentWeight >= g_rTargetWeight then
+--            StopFilling("COMPLETADO");
+--        else
+--            RefreshScreen;
+--        end if;
+--    else
+--        RefreshScreen;
+--    end if;
+--end;
 
 -- ---------------------------------------------------------------------------
 -- Handlers iRite
@@ -200,17 +199,23 @@ begin
         end if;
     end if;
 
-    -- g_iPendingEntry := g_ciEntryNone;
+    g_iPendingEntry := EntryNone;
     RefreshScreen;
 end;
 
-handler Timer1Trip;
-begin
-    CheckTarget;
-end;
+--handler Timer1Trip;
+--begin
+--    CheckTarget;
+--end;
 
+-- Cree aca el nuevo handler para el setpoint 1 y mande a llamar StopFilling("COMPLETADO"); dentro del Handler
+
+handler SP1Trip;
+begin
+    StopFilling("COMPLETADO");
+end;
 -- ---------------------------------------------------------------------------
--- Startup
+-- Startup handlerStartup
 -- ---------------------------------------------------------------------------
 
 begin
@@ -218,15 +223,22 @@ begin
     g_rCurrentWeight := 0.0;
     g_iFilling := 0;
     g_iOutputState := 0;
-    -- g_iPendingEntry := g_ciEntryNone;
+    g_iPendingEntry := EntryNone;
     g_sState := "ESPERANDO";
 
     SelectScreen(1);
     SetFillOutput(0);
     RefreshScreen;
 
-    SetTimerMode(g_ciTimerMonitor, TimerContinuous);
-    SetTimer(g_ciTimerMonitor, g_ciMonitorMs);
-    StartTimer(g_ciTimerMonitor);
+    --SetTimerMode(g_ciTimerMonitor, TimerContinuous);
+    -- Inicializacion de timer
+    --SetTimer(g_ciTimerMonitor, g_ciMonitorMs);
+    --StartTimer(g_ciTimerMonitor);
+    -- Inicializacion de setpoint.
+
+    -- Ingrese aca la funcion set del setpoint 1 con el valor del peso objetivo g_rTargetWeight
+    SetSPValue(1, g_rTargetWeight);
+    -- Ingrese aca la funcion enable del setpoint 1
+    EnableSP(1);
 end main;
---$END  c:\Users\Usuario\Documents\LocalDev\PRUEBAS\ipesa-ensacado-prueba-tecnica\prueba\main.src
+--$END  c:\Users\josez\OneDrive\Desktop\IPEHSA - Prueba\ipesa-prueba-tecnica\prueba\main.src
